@@ -19,7 +19,7 @@ public class DataExtractor {
             final Table table = extractor.extract(0, rect);
 
             System.out.println("Text in the area:\n");
-            System.out.println(table.toString());
+            System.out.println(table.toHtml());
         }
     }
 }

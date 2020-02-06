@@ -13,13 +13,17 @@ import com.onedirection.app.table.entity.Table;
 import com.onedirection.app.table.entity.TableCell;
 import com.onedirection.app.table.entity.TableRow;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 /**
  * @author THOQ LUONG Mar 22, 2015 3:34:29 PM
@@ -328,7 +332,7 @@ public class PDFTableExtractor {
     private List<Range<Integer>> getColumnRanges(Collection<TextPosition> texts) {
         TrapRangeBuilder rangesBuilder = new TrapRangeBuilder();
         for (TextPosition text : texts) {
-            Range<Integer> range = Range.closed((int) text.getX(), (int) (text.getX() + text.getWidth()));
+            Range<Integer> range = Range.closed((int) text.getX(), (int) (text.getX() + text.getWidth() +0.5));
             rangesBuilder.addRange(range);
         }
         return rangesBuilder.build();
@@ -362,21 +366,24 @@ public class PDFTableExtractor {
 
     //--------------------------------------------------------------------------
     //  Inner class
-    private static class TextPositionExtractor extends PDFTextStripper {
+    private static class TextPositionExtractor extends PDFTextStripperByArea {
 
         private final List<TextPosition> textPositions = new ArrayList<>();
         private final int pageId;
-
         private TextPositionExtractor(PDDocument document, int pageId) throws IOException {
             super();
             super.setSortByPosition(true);
             super.document = document;
             this.pageId = pageId;
+            Rectangle rect = new Rectangle( 10, 160, 950, 65 );
+            super.addRegion("test", rect);
         }
 
         public void stripPage(int pageId) throws IOException {
             this.setStartPage(pageId + 1);
             this.setEndPage(pageId + 1);
+            PDPage firstPage = document.getPage(pageId);
+            super.extractRegions( firstPage );
             try (Writer writer = new OutputStreamWriter(new ByteArrayOutputStream())) {
                 writeText(document, writer);
             }
