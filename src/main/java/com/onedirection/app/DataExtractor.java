@@ -11,12 +11,16 @@ import java.awt.*;
 import java.io.*;
 import java.util.List;
 import java.util.*;
+import java.util.Arrays;
+import java.util.Properties;
 
 public class DataExtractor {
 
-    private final static FilenameFilter FILTER = (dir, name) -> name.endsWith(".pdf");
-    private final static String DEFAULT_INPUT_DIRECTORY_PATH = "build/resources/main/";
-    private final static String DEFAULT_OUTPUT_DIRECTORY_PATH = "build/resources/output/";
+    private static final FilenameFilter FILTER = (dir, name) -> name.endsWith(".pdf");
+    private static final String DEFAULT_INPUT_DIRECTORY_PATH = "build/resources/main/";
+    private static final String DEFAULT_OUTPUT_DIRECTORY_PATH = "build/resources/output/";
+    private static final String TABLE_KEY = "Table";
+    private static final String METADATA_KEY = "Metadata";
 
     public static void main(String[] args) {
         final String inDirectoryPath = getIn(args);
@@ -33,22 +37,30 @@ public class DataExtractor {
         try (PDDocument document = PDDocument.load(pdfSource)) {
             final TableExtractor extractor = new TableExtractor(document);
             final List<Map<String, Object>> tableList = new ArrayList<>();
+            final Map<String, Object> metadataMap = new HashMap<>();
 
-            getRectangles(configFile).stream().forEach(rectangle -> {
-                final Table table = extractor.extract(0, rectangle);
-//                System.out.println("Text in the area:\n");
-//                System.out.println(table.toHtml());
+            getRectangles(configFile).entrySet().stream().forEach(stringListEntry -> {
+                    String type = stringListEntry.getKey();
+                    List<Rectangle> rectangles = stringListEntry.getValue();
 
-                tableList.addAll(formatTableToList(table));
-                System.out.println(tableList);
+                    switch (type)  {
+                        case TABLE_KEY:
+                            rectangles.stream().forEach(rectangle -> {
+                                final Table table = extractor.extract(0, rectangle);
+                                tableList.addAll(formatTableToList(table));
+                            });
+                            break;
+                        case METADATA_KEY:
+                            rectangles.stream().forEach(rectangle -> {
+                                final Table table = extractor.extract(0, rectangle);
+
+                                metadataMap.putAll(formatMetadataToMap(table));
+                            });
+                            break;
+                    }
             });
 
-            final Rectangle metadataRect = new Rectangle(5, 34, 200, 50);
-            final Table metadataTable = extractor.extract(0, metadataRect);
-            final Map<String, Object> metadataMap = formatMetadataToMap(metadataTable);
-            System.out.println(metadataMap);
-
-            Map<String, Object> outputMap = new HashMap<>();
+            final Map<String, Object> outputMap = new HashMap<>();
             outputMap.putAll(metadataMap);
             outputMap.put("table", tableList);
 
@@ -68,7 +80,7 @@ public class DataExtractor {
         }
     }
 
-    private static java.util.List<Rectangle> getRectangles(File configFile) {
+    private static Map<String, java.util.List<Rectangle>> getRectangles(File configFile) {
         final Properties prop = new Properties();
         try (InputStream input = new FileInputStream(configFile.toString())) {
             prop.load(input);
@@ -76,29 +88,33 @@ public class DataExtractor {
             e.printStackTrace();
         }
 
-        java.util.List<Rectangle> rectangleList = new ArrayList<>();
-
+        Map<String, List<Rectangle>> rectangleMap = new HashMap<>();
+        java.util.List<Rectangle> rectangleTableList = new ArrayList<>();
+        // Get list of rectangle
         if (prop.getProperty("table.left-corner.x") != null) {
-            rectangleList.add(new Rectangle(Integer.parseInt(prop.getProperty("table.left-corner.x")),
+            rectangleTableList.add(new Rectangle(Integer.parseInt(prop.getProperty("table.left-corner.x")),
                     Integer.parseInt(prop.getProperty("table.left-corner.y")),
                     Integer.parseInt(prop.getProperty("table.width")),
                     Integer.parseInt(prop.getProperty("table.height"))
             ));
         }
+        rectangleMap.put(TABLE_KEY, rectangleTableList);
 
+        java.util.List<Rectangle> rectangleMetadataList = new ArrayList<>();
         int i = 1;
         while (prop.getProperty("metadata." + i + ".left-corner.x") != null) {
             // property #i has value p
-            rectangleList.add(new Rectangle(
+            rectangleMetadataList.add(new Rectangle(
                     Integer.parseInt(prop.getProperty("metadata." + i + ".left-corner.x")),
                     Integer.parseInt(prop.getProperty("metadata." + i + ".left-corner.y")),
                     Integer.parseInt(prop.getProperty("metadata." + i + ".width")),
                     Integer.parseInt(prop.getProperty("metadata." + i + ".height"))
             ));
+            rectangleMap.put(METADATA_KEY, rectangleMetadataList);
             i++;
         }
 
-        return rectangleList;
+        return rectangleMap;
     }
 
     private static File getConfigFile(File directory) {
