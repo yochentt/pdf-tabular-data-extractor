@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.awt.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -29,16 +30,18 @@ public class DataExtractor {
 
         try (PDDocument document = PDDocument.load(pdfSource)) {
             final TableExtractor extractor = new TableExtractor(document);
-            final Rectangle rect = getRectangle(configFile);
-            final Table table = extractor.extract(0, rect);
-            System.out.println("Text in the area:\n");
-            System.out.println(table.toHtml());
+
+            getRectangles(configFile).stream().forEach(rectangle -> {
+                final Table table = extractor.extract(0, rectangle);
+                System.out.println("Text in the area:\n");
+                System.out.println(table.toHtml());
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static Rectangle getRectangle(File configFile) {
+    private static java.util.List<Rectangle> getRectangles(File configFile) {
         final Properties prop = new Properties();
         try (InputStream input = new FileInputStream(configFile.toString())) {
             prop.load(input);
@@ -46,10 +49,29 @@ public class DataExtractor {
             e.printStackTrace();
         }
 
-        return new Rectangle(Integer.parseInt(prop.getProperty("table.left-corner.x")),
-                Integer.parseInt(prop.getProperty("table.left-corner.y")),
-                Integer.parseInt(prop.getProperty("table.width")),
-                Integer.parseInt(prop.getProperty("table.height")));
+        java.util.List<Rectangle> rectangleList = new ArrayList<>();
+
+        if (prop.getProperty("table.left-corner.x") != null) {
+            rectangleList.add(new Rectangle(Integer.parseInt(prop.getProperty("table.left-corner.x")),
+                    Integer.parseInt(prop.getProperty("table.left-corner.y")),
+                    Integer.parseInt(prop.getProperty("table.width")),
+                    Integer.parseInt(prop.getProperty("table.height"))
+            ));
+        }
+
+        int i = 1;
+        while (prop.getProperty("metadata." + i + ".left-corner.x") != null) {
+            // property #i has value p
+            rectangleList.add(new Rectangle(
+                    Integer.parseInt(prop.getProperty("metadata." + i + ".left-corner.x")),
+                    Integer.parseInt(prop.getProperty("metadata." + i + ".left-corner.y")),
+                    Integer.parseInt(prop.getProperty("metadata." + i + ".width")),
+                    Integer.parseInt(prop.getProperty("metadata." + i + ".height"))
+            ));
+            i++;
+        }
+
+        return rectangleList;
     }
 
     private static File getConfigFile(File directory) {
