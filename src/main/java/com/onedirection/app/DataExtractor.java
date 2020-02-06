@@ -1,5 +1,6 @@
 package com.onedirection.app;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onedirection.app.table.TableExtractor;
 import com.onedirection.app.table.entity.Table;
 import com.onedirection.app.table.entity.TableCell;
@@ -7,16 +8,9 @@ import com.onedirection.app.table.entity.TableRow;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.List;
+import java.util.*;
 
 public class DataExtractor {
 
@@ -38,22 +32,36 @@ public class DataExtractor {
 
         try (PDDocument document = PDDocument.load(pdfSource)) {
             final TableExtractor extractor = new TableExtractor(document);
+            final List<Map<String, Object>> tableList = new ArrayList<>();
 
             getRectangles(configFile).stream().forEach(rectangle -> {
                 final Table table = extractor.extract(0, rectangle);
-                System.out.println("Text in the area:\n");
-                System.out.println(table.toHtml());
+//                System.out.println("Text in the area:\n");
+//                System.out.println(table.toHtml());
 
-                final List<Map<String, Object>> tableList = formatTableToList(table);
+                tableList.addAll(formatTableToList(table));
                 System.out.println(tableList);
             });
 
+            final Rectangle metadataRect = new Rectangle(5, 34, 200, 50);
+            final Table metadataTable = extractor.extract(0, metadataRect);
+            final Map<String, Object> metadataMap = formatMetadataToMap(metadataTable);
+            System.out.println(metadataMap);
 
-//            Map<String, Object> outputMap = new HashMap<>();
-//            outputMap.putAll(metadataMap);
-//            outputMap.put("table", tableList);
-//            System.out.println("Text in the area:\n");
-//            System.out.println(table.toHtml());
+            Map<String, Object> outputMap = new HashMap<>();
+            outputMap.putAll(metadataMap);
+            outputMap.put("table", tableList);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(outputMap);
+            System.out.println(json);
+
+            File directory = new File(outDirectoryPath);
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+
+            objectMapper.writeValue(new File(String.format("%s/%s.json", outDirectoryPath, pdfSource.getName())), outputMap);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,9 +144,11 @@ public class DataExtractor {
 
     private static Map<String, Object> formatMetadataToMap(Table table) {
         Map<String, Object> metadataMap = new HashMap<>();
-        final List<TableRow> rows = table.getRows();
         for (TableRow row : table.getRows()) {
             final List<TableCell> cells = row.getCells();
+            if (cells.size() < 2) {
+                continue;
+            }
             metadataMap.put(cells.get(0).getContent(), cells.get(1).getContent());
         }
         return metadataMap;
