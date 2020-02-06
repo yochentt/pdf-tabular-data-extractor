@@ -11,8 +11,6 @@ import java.awt.*;
 import java.io.*;
 import java.util.List;
 import java.util.*;
-import java.util.Arrays;
-import java.util.Properties;
 
 public class DataExtractor {
 
@@ -37,30 +35,30 @@ public class DataExtractor {
         try (PDDocument document = PDDocument.load(pdfSource)) {
             final TableExtractor extractor = new TableExtractor(document);
             final List<Map<String, Object>> tableList = new ArrayList<>();
-            final Map<String, Object> metadataMap = new HashMap<>();
+            final Map<String, Object> metadataMap = new LinkedHashMap<>();
 
             getRectangles(configFile).entrySet().stream().forEach(stringListEntry -> {
-                    String type = stringListEntry.getKey();
-                    List<Rectangle> rectangles = stringListEntry.getValue();
+                String type = stringListEntry.getKey();
+                List<Rectangle> rectangles = stringListEntry.getValue();
 
-                    switch (type)  {
-                        case TABLE_KEY:
-                            rectangles.stream().forEach(rectangle -> {
-                                final Table table = extractor.extract(0, rectangle);
-                                tableList.addAll(formatTableToList(table));
-                            });
-                            break;
-                        case METADATA_KEY:
-                            rectangles.stream().forEach(rectangle -> {
-                                final Table table = extractor.extract(0, rectangle);
+                switch (type) {
+                    case TABLE_KEY:
+                        rectangles.stream().forEach(rectangle -> {
+                            final Table table = extractor.extract(0, rectangle);
+                            tableList.addAll(formatTableToList(table));
+                        });
+                        break;
+                    case METADATA_KEY:
+                        rectangles.stream().forEach(rectangle -> {
+                            final Table table = extractor.extract(0, rectangle);
 
-                                metadataMap.putAll(formatMetadataToMap(table));
-                            });
-                            break;
-                    }
+                            metadataMap.putAll(formatMetadataToMap(table));
+                        });
+                        break;
+                }
             });
 
-            final Map<String, Object> outputMap = new HashMap<>();
+            final Map<String, Object> outputMap = new LinkedHashMap<>();
             outputMap.putAll(metadataMap);
             outputMap.put("table", tableList);
 
