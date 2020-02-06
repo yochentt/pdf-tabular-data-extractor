@@ -1,8 +1,8 @@
 package com.onedirection.app;
 
+import com.onedirection.app.table.TableExtractor;
+import com.onedirection.app.table.entity.Table;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import java.awt.*;
 import java.io.File;
@@ -12,16 +12,14 @@ public class DataExtractor {
 
     public static void main(String[] args) throws IOException {
 
-        try (PDDocument document = PDDocument.load(new File(args[0]))) {
+        try (PDDocument document = PDDocument.load(new File("build/resources/main/sample_grab.pdf"))) {
 
-            PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-            stripper.setSortByPosition(true);
-            Rectangle rect = new Rectangle(10, 280, 275, 60);
-            stripper.addRegion("class1", rect);
-            PDPage firstPage = document.getPage(0);
-            stripper.extractRegions(firstPage);
-            System.out.println("Text in the area:" + rect);
-            System.out.println(stripper.getTextForRegion("class1"));
+            final TableExtractor extractor = new TableExtractor(document);
+            final Rectangle rect = new Rectangle(10, 160, 950, 65);
+            final Table table = extractor.extract(0, rect);
+
+            System.out.println("Text in the area:\n");
+            System.out.println(table.toString());
         }
     }
 }

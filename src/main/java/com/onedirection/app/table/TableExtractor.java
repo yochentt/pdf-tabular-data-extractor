@@ -27,6 +27,8 @@ public class TableExtractor {
 
     private PDDocument document;
 
+    private final double wordPadding = 0.5;
+
     public TableExtractor(final PDDocument document) {
         this.document = document;
     }
@@ -211,7 +213,7 @@ public class TableExtractor {
     private List<Range<Integer>> getColumnRanges(Collection<TextPosition> texts) {
         TrapRangeBuilder rangesBuilder = new TrapRangeBuilder();
         for (TextPosition text : texts) {
-            Range<Integer> range = Range.closed((int) text.getX(), (int) (text.getX() + text.getWidth()));
+            Range<Integer> range = Range.closed((int) text.getX(), (int) (text.getX() + text.getWidth() + this.wordPadding));
             rangesBuilder.addRange(range);
         }
         return rangesBuilder.build();
