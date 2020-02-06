@@ -37,6 +37,8 @@ public class MAIN {
      * @param args
      */
     public static void main(String[] args) {
+
+        System.out.println( "here " + args[0]);
         PropertyConfigurator.configure(MAIN.class.getResource("/com/giaybac/traprange/log4j.properties"));
         if (args.length == 1 && "-h".equals(args[0])) {
             printHelp();
