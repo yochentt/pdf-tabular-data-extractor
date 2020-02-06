@@ -61,14 +61,14 @@ jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'com.onedirection.app.MAIN'
+                'Main-Class': 'com.onedirection.app.DataExtractor'
         )
     }
 }
 
 task customFatJar(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'com.onedirection.app.MAIN'
+        attributes 'Main-Class': 'com.onedirection.app.DataExtractor'
     }
     baseName = 'all-in-one-jar'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
