@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'com.google.guava', name: 'guava', version: '18.0'
+    // https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox
+    compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.18'
+
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.12'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.12'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repository.cloudera.com/artifactory/cloudera-repos/"
+    }
+    maven {
+        credentials {
+            username vstsUserInternal
+            password vstsPasswordInternal
+        }
+        url vstsUrlInternal
+    }
+    maven {
+        credentials {
+            username vstsUserPreRelease
+            password vstsPasswordPreRelease
+        }
+        url vstsUrlPreRelease
+    }
+    maven {
+        credentials {
+            username vstsUserInternal
+            password vstsPasswordInternal
+        }
+        url vstsUrlThirdParty
+    }
+    maven {
+        url "https://maven.restlet.com/"
+    }
+}

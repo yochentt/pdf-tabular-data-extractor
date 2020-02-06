@@ -1,0 +1,3 @@
+rootProject.name = 'pdf-tabular-data-extractor'
+include 'data-extractor-app'
+
