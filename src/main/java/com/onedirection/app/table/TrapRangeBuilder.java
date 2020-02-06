@@ -1,8 +1,3 @@
-/**
- * Copyright (C) 2015, GIAYBAC
- *
- * Released under the MIT license
- */
 package com.onedirection.app.table;
 
 import com.google.common.collect.Range;
@@ -14,9 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * @author THOQ LUONG Mar 19, 2015 10:43:22 PM
- */
 public class TrapRangeBuilder {
 
     //--------------------------------------------------------------------------
@@ -24,12 +16,6 @@ public class TrapRangeBuilder {
     private final Logger logger = LoggerFactory.getLogger(TrapRangeBuilder.class);
     private final List<Range<Integer>> ranges = new ArrayList<>();
 
-    //--------------------------------------------------------------------------
-    //  Initialization and releasation
-    //--------------------------------------------------------------------------
-    //  Getter N Setter
-    //--------------------------------------------------------------------------
-    //  Method binding
     public TrapRangeBuilder addRange(Range<Integer> range) {
         ranges.add(range);
         return this;
@@ -67,11 +53,4 @@ public class TrapRangeBuilder {
         //return
         return retVal;
     }
-
-    //--------------------------------------------------------------------------
-    //  Implement N Override
-    //--------------------------------------------------------------------------
-    //  Utils
-    //--------------------------------------------------------------------------
-    //  Inner class
 }
